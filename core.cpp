@@ -91,6 +91,7 @@ uint8_t ZoneToIOMap[] = {22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
 #endif
 #if defined(GREENIQ)
 uint8_t ZoneToIOMap[] = {5, 7, 0, 1, 2, 3, 4};
+#define HB_LED 11 // network led as heartbeat
 #else
 uint8_t ZoneToIOMap[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 #define SR_CLK_PIN  7
@@ -193,6 +194,9 @@ void io_setup()
 			digitalWrite(SR_DAT_PIN, 0);
 			pinMode(SR_LAT_PIN, OUTPUT);
 			digitalWrite(SR_LAT_PIN, 0);
+#else
+			pinMode(HB_LED, OUTPUT);
+			digitalWrite(HB_LED, 0);
 #endif
 		}
 		else
@@ -427,6 +431,21 @@ static void ProcessEvents()
 	}
 }
 
+#ifdef GREENIQ
+static uint32_t hbCounter = 0;
+void heartBeat()
+{
+	int state;
+	if(hbCounter >= 25)
+	{
+		state = !digitalRead(HB_LED);
+		digitalWrite(HB_LED, state);
+		hbCounter = 0;
+	}
+	hbCounter++;
+}
+#endif
+
 void mainLoop()
 {
 	static bool firstLoop = true;
@@ -495,4 +514,7 @@ void mainLoop()
 
 	// latch any output modifications
 	io_latch();
+#ifdef GREENIQ
+    heartBeat();
+#endif
 }
